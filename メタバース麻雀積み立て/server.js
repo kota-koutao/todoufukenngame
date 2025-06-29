@@ -99,3 +99,23 @@ app.post('/api/change-password', checkAuth, (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
+// ... 他のコードの末尾 ...
+
+// パスワード変更
+app.post('/api/change-password', checkAuth, (req, res) => {
+  // ...（省略）...
+});
+
+
+// ========== ここから追加 ==========
+// ルートURLへのアクセスに応答する
+app.get('/', (req, res) => {
+  res.send('サーバーは正常に動作しています！「メタバース居酒屋組み立て」の準備ができました。');
+});
+// ========== ここまで追加 ==========
+
+
+// サーバーの起動
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
