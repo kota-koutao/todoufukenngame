@@ -2,14 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "server.js",
+      "src": "メタバース居酒屋組み立て/server.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "server.js"
+      "dest": "メタバース居酒屋組み立て/server.js"
     }
   ]
 }
