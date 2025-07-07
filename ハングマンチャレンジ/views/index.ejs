@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ワードレスキュー！</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 ワードレスキュー！</h1>
+            <p>隠された英単語を当てるハングマンゲーム</p>
+        </header>
+
+        <main>
+            <div class="game-intro">
+                <h2>ゲームの説明</h2>
+                <p>アルファベットを1文字ずつ入力して、隠された英単語を当ててください。</p>
+                <p>間違いは6回まで許されます。全ての文字を当てればクリアです！</p>
+            </div>
+
+            <div class="level-selection">
+                <h2>レベルを選択してください</h2>
+                <form action="/start" method="POST">
+                    <div class="level-options">
+                        <label class="level-card">
+                            <input type="radio" name="level" value="easy" required>
+                            <div class="card-content">
+                                <h3>🌟 かんたん</h3>
+                                <p>中学1年レベル</p>
+                                <small>apple, book, cat, desk, pen</small>
+                            </div>
+                        </label>
+                        
+                        <label class="level-card">
+                            <input type="radio" name="level" value="normal" required>
+                            <div class="card-content">
+                                <h3>⭐ ふつう</h3>
+                                <p>中学2年レベル</p>
+                                <small>school, summer, friend, music, train</small>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="start-btn">ゲームを始める</button>
+                </form>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2024 ワードレスキュー！</p>
+        </footer>
+    </div>
+</body>
+</html>

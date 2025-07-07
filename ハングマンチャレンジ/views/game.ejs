@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ワードレスキュー！ - ゲーム中</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 ワードレスキュー！</h1>
+            <p>レベル: <%= gameState.level === 'easy' ? 'かんたん' : 'ふつう' %></p>
+        </header>
+
+        <main>
+            <% if (gameState.gameOver) { %>
+                <!-- ゲーム終了画面 -->
+                <div class="game-result">
+                    <% if (gameState.gameWon) { %>
+                        <div class="win-message">
+                            <h2>🎉 ゲームクリア！</h2>
+                            <p>おめでとうございます！</p>
+                            <p>正解は '<strong><%= gameState.targetWord %></strong>' （<%= gameState.meaning %>）でした！</p>
+                        </div>
+                    <% } else { %>
+                        <div class="lose-message">
+                            <h2>😢 ゲームオーバー...</h2>
+                            <p>残念！</p>
+                            <p>正解は '<strong><%= gameState.targetWord %></strong>' （<%= gameState.meaning %>）でした。</p>
+                        </div>
+                    <% } %>
+                    
+                    <form action="/reset" method="POST">
+                        <button type="submit" class="restart-btn">もう一度プレイ</button>
+                    </form>
+                </div>
+            <% } else { %>
+                <!-- ゲーム中画面 -->
+                <div class="game-board">
+                    <div class="word-display">
+                        <h2><%= gameState.displayWord %></h2>
+                    </div>
+
+                    <div class="game-info">
+                        <div class="lives-display">
+                            <h3>残りチャンス: <%= gameState.lives %></h3>
+                            <div class="lives-visual">
+                                <% for (let i = 0; i < gameState.maxLives; i++) { %>
+                                    <span class="life <%= i < gameState.lives ? 'active' : 'lost' %>">❤️</span>
+                                <% } %>
+                            </div>
+                        </div>
+
+                        <% if (gameState.wrongGuesses.length > 0) { %>
+                            <div class="wrong-guesses">
+                                <h3>ミス: <%= gameState.wrongGuesses.join(', ') %></h3>
+                            </div>
+                        <% } %>
+                    </div>
+
+                    <div class="guess-form">
+                        <form action="/guess" method="POST">
+                            <label for="letter">アルファベットを1文字入力してください:</label>
+                            <input type="text" id="letter" name="letter" maxlength="1" required autofocus>
+                            <button type="submit">推測する</button>
+                        </form>
+                    </div>
+
+                    <div class="game-actions">
+                        <form action="/reset" method="POST">
+                            <button type="submit" class="reset-btn">ゲームをやめる</button>
+                        </form>
+                    </div>
+                </div>
+            <% } %>
+        </main>
+
+        <footer>
+            <p>&copy; 2024 ワードレスキュー！</p>
+        </footer>
+    </div>
+
+    <script>
+        // 入力フィールドの自動フォーカス
+        document.addEventListener('DOMContentLoaded', function() {
+            const letterInput = document.getElementById('letter');
+            if (letterInput) {
+                letterInput.focus();
+                
+                // 入力値を大文字に変換
+                letterInput.addEventListener('input', function(e) {
+                    e.target.value = e.target.value.toLowerCase();
+                });
+            }
+        });
+    </script>
+</body>
+</html>
