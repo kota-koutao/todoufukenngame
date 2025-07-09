@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>県庁所在地クイズシューティング</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, #87CEEB, #98FB98);
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+        #gameContainer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(to bottom, #87CEEB, #98FB98);
+        }
+        
+        #gameArea {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #player {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 60px;
+            background: #4169E1;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            transition: left 0.1s ease;
+        }
+        
+        .enemy {
+            position: absolute;
+            width: 120px;
+            height: 60px;
+            background: #FF6B6B;
+            border-radius: 10px;
+            border: 2px solid #fff;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        
+        .bullet {
+            position: absolute;
+            width: 8px;
+            height: 20px;
+            background: #FFD700;
+            border-radius: 4px;
+            box-shadow: 0 0 10px #FFD700;
+        }
+        
+        #choiceContainer {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+        }
+        
+        .choice-button {
+            padding: 15px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transition: all 0.2s;
+        }
+        
+        .choice-button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+        
+        .choice-button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        #scoreContainer {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        #lifeContainer {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        #gameOverScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+            font-size: 48px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        #restartButton {
+            padding: 20px 40px;
+            font-size: 24px;
+            font-weight: bold;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            margin-top: 30px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transition: all 0.2s;
+        }
+        
+        #restartButton:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+        
+        .explosion {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, #FFD700, #FF6B6B);
+            border-radius: 50%;
+            animation: explode 0.5s ease-out forwards;
+        }
+        
+        @keyframes explode {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(3);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="gameArea">
+            <div id="player"></div>
+            <div id="scoreContainer">スコア: <span id="score">0</span></div>
+            <div id="lifeContainer">ライフ: <span id="life">❤️❤️❤️</span></div>
+        </div>
+        
+        <div id="choiceContainer">
+            <button class="choice-button" id="choice1" onclick="selectChoice(0)">選択肢1</button>
+            <button class="choice-button" id="choice2" onclick="selectChoice(1)">選択肢2</button>
+            <button class="choice-button" id="choice3" onclick="selectChoice(2)">選択肢3</button>
+        </div>
+        
+        <div id="gameOverScreen">
+            <div>ゲームオーバー</div>
+            <button id="restartButton" onclick="restartGame()">リスタート</button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            { prefecture: '北海道', capital: '札幌市' },
+            { prefecture: '青森県', capital: '青森市' },
+            { prefecture: '岩手県', capital: '盛岡市' },
+            { prefecture: '宮城県', capital: '仙台市' },
+            { prefecture: '秋田県', capital: '秋田市' },
+            { prefecture: '山形県', capital: '山形市' },
+            { prefecture: '福島県', capital: '福島市' },
+            { prefecture: '茨城県', capital: '水戸市' },
+            { prefecture: '栃木県', capital: '宇都宮市' },
+            { prefecture: '群馬県', capital: '前橋市' },
+            { prefecture: '埼玉県', capital: 'さいたま市' },
+            { prefecture: '千葉県', capital: '千葉市' },
+            { prefecture: '東京都', capital: '東京都' },
+            { prefecture: '神奈川県', capital: '横浜市' },
+            { prefecture: '新潟県', capital: '新潟市' },
+            { prefecture: '富山県', capital: '富山市' },
+            { prefecture: '石川県', capital: '金沢市' },
+            { prefecture: '福井県', capital: '福井市' },
+            { prefecture: '山梨県', capital: '甲府市' },
+            { prefecture: '長野県', capital: '長野市' },
+            { prefecture: '岐阜県', capital: '岐阜市' },
+            { prefecture: '静岡県', capital: '静岡市' },
+            { prefecture: '愛知県', capital: '名古屋市' },
+            { prefecture: '三重県', capital: '津市' },
+            { prefecture: '滋賀県', capital: '大津市' },
+            { prefecture: '京都府', capital: '京都市' },
+            { prefecture: '大阪府', capital: '大阪市' },
+            { prefecture: '兵庫県', capital: '神戸市' },
+            { prefecture: '奈良県', capital: '奈良市' },
+            { prefecture: '和歌山県', capital: '和歌山市' },
+            { prefecture: '鳥取県', capital: '鳥取市' },
+            { prefecture: '島根県', capital: '松江市' },
+            { prefecture: '岡山県', capital: '岡山市' },
+            { prefecture: '広島県', capital: '広島市' },
+            { prefecture: '山口県', capital: '山口市' },
+            { prefecture: '徳島県', capital: '徳島市' },
+            { prefecture: '香川県', capital: '高松市' },
+            { prefecture: '愛媛県', capital: '松山市' },
+            { prefecture: '高知県', capital: '高知市' },
+            { prefecture: '福岡県', capital: '福岡市' },
+            { prefecture: '佐賀県', capital: '佐賀市' },
+            { prefecture: '長崎県', capital: '長崎市' },
+            { prefecture: '熊本県', capital: '熊本市' },
+            { prefecture: '大分県', capital: '大分市' },
+            { prefecture: '宮崎県', capital: '宮崎市' },
+            { prefecture: '鹿児島県', capital: '鹿児島市' },
+            { prefecture: '沖縄県', capital: '那覇市' }
+        ];
+
+        let score = 0;
+        let life = 3;
+        let currentQuestion = null;
+        let currentAnswer = null;
+        let enemyElement = null;
+        let usedQuestions = [];
+        let gameRunning = true;
+        let playerPosition = 50;
+        let enemyPosition = { x: 50, y: 0 };
+        let bullets = [];
+        let isChoiceDisabled = false;
+
+        function initGame() {
+            score = 0;
+            life = 3;
+            usedQuestions = [];
+            gameRunning = true;
+            playerPosition = 50;
+            bullets = [];
+            isChoiceDisabled = false;
+            
+            updateDisplay();
+            document.getElementById('gameOverScreen').style.display = 'none';
+            
+            clearEnemies();
+            clearBullets();
+            
+            nextQuestion();
+        }
+
+        function updateDisplay() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('life').textContent = '❤️'.repeat(life);
+        }
+
+        function clearEnemies() {
+            const enemies = document.querySelectorAll('.enemy');
+            enemies.forEach(enemy => enemy.remove());
+        }
+
+        function clearBullets() {
+            const bulletElements = document.querySelectorAll('.bullet');
+            bulletElements.forEach(bullet => bullet.remove());
+            bullets = [];
+        }
+
+        function nextQuestion() {
+            if (!gameRunning) return;
+            
+            clearEnemies();
+            clearBullets();
+            
+            if (usedQuestions.length === quizData.length) {
+                usedQuestions = [];
+            }
+            
+            let availableQuestions = quizData.filter((_, index) => !usedQuestions.includes(index));
+            let randomIndex = Math.floor(Math.random() * availableQuestions.length);
+            currentQuestion = availableQuestions[randomIndex];
+            currentAnswer = currentQuestion.capital;
+            
+            usedQuestions.push(quizData.indexOf(currentQuestion));
+            
+            createEnemy();
+            createChoices();
+        }
+
+        function createEnemy() {
+            enemyElement = document.createElement('div');
+            enemyElement.className = 'enemy';
+            enemyElement.textContent = currentQuestion.prefecture;
+            
+            enemyPosition.x = Math.random() * (window.innerWidth - 120);
+            enemyPosition.y = 0;
+            
+            enemyElement.style.left = enemyPosition.x + 'px';
+            enemyElement.style.top = enemyPosition.y + 'px';
+            
+            document.getElementById('gameArea').appendChild(enemyElement);
+            
+            moveEnemy();
+        }
+
+        function moveEnemy() {
+            if (!gameRunning || !enemyElement) return;
+            
+            enemyPosition.y += 2;
+            enemyElement.style.top = enemyPosition.y + 'px';
+            
+            if (enemyPosition.y > window.innerHeight) {
+                life--;
+                updateDisplay();
+                
+                if (life <= 0) {
+                    gameOver();
+                } else {
+                    setTimeout(nextQuestion, 1000);
+                }
+                return;
+            }
+            
+            requestAnimationFrame(moveEnemy);
+        }
+
+        function createChoices() {
+            let choices = [currentAnswer];
+            
+            while (choices.length < 3) {
+                let randomCapital = quizData[Math.floor(Math.random() * quizData.length)].capital;
+                if (!choices.includes(randomCapital)) {
+                    choices.push(randomCapital);
+                }
+            }
+            
+            choices = choices.sort(() => Math.random() - 0.5);
+            
+            document.getElementById('choice1').textContent = choices[0];
+            document.getElementById('choice2').textContent = choices[1];
+            document.getElementById('choice3').textContent = choices[2];
+            
+            enableChoices();
+        }
+
+        function selectChoice(choiceIndex) {
+            if (!gameRunning || isChoiceDisabled) return;
+            
+            const buttons = document.querySelectorAll('.choice-button');
+            const selectedChoice = buttons[choiceIndex].textContent;
+            
+            if (selectedChoice === currentAnswer) {
+                score += 10;
+                updateDisplay();
+                
+                shootBullet();
+                
+                setTimeout(() => {
+                    if (gameRunning) {
+                        nextQuestion();
+                    }
+                }, 1000);
+            } else {
+                disableChoices();
+                setTimeout(() => {
+                    if (gameRunning) {
+                        enableChoices();
+                    }
+                }, 1000);
+            }
+        }
+
+        function shootBullet() {
+            if (!enemyElement) return;
+            
+            const bullet = document.createElement('div');
+            bullet.className = 'bullet';
+            
+            const playerElement = document.getElementById('player');
+            const playerRect = playerElement.getBoundingClientRect();
+            
+            bullet.style.left = (playerRect.left + playerRect.width / 2 - 4) + 'px';
+            bullet.style.top = (playerRect.top - 20) + 'px';
+            
+            document.getElementById('gameArea').appendChild(bullet);
+            
+            const bulletObj = {
+                element: bullet,
+                x: playerRect.left + playerRect.width / 2 - 4,
+                y: playerRect.top - 20
+            };
+            
+            bullets.push(bulletObj);
+            moveBullet(bulletObj);
+        }
+
+        function moveBullet(bulletObj) {
+            if (!gameRunning) return;
+            
+            bulletObj.y -= 10;
+            bulletObj.element.style.top = bulletObj.y + 'px';
+            
+            if (enemyElement && checkCollision(bulletObj, enemyElement)) {
+                createExplosion(enemyPosition.x + 60, enemyPosition.y + 30);
+                
+                bulletObj.element.remove();
+                enemyElement.remove();
+                enemyElement = null;
+                
+                const index = bullets.indexOf(bulletObj);
+                if (index > -1) {
+                    bullets.splice(index, 1);
+                }
+                
+                return;
+            }
+            
+            if (bulletObj.y < 0) {
+                bulletObj.element.remove();
+                const index = bullets.indexOf(bulletObj);
+                if (index > -1) {
+                    bullets.splice(index, 1);
+                }
+                return;
+            }
+            
+            requestAnimationFrame(() => moveBullet(bulletObj));
+        }
+
+        function checkCollision(bullet, enemy) {
+            const bulletRect = bullet.element.getBoundingClientRect();
+            const enemyRect = enemy.getBoundingClientRect();
+            
+            return !(bulletRect.right < enemyRect.left || 
+                    bulletRect.left > enemyRect.right || 
+                    bulletRect.bottom < enemyRect.top || 
+                    bulletRect.top > enemyRect.bottom);
+        }
+
+        function createExplosion(x, y) {
+            const explosion = document.createElement('div');
+            explosion.className = 'explosion';
+            explosion.style.left = x + 'px';
+            explosion.style.top = y + 'px';
+            
+            document.getElementById('gameArea').appendChild(explosion);
+            
+            setTimeout(() => {
+                explosion.remove();
+            }, 500);
+        }
+
+        function disableChoices() {
+            isChoiceDisabled = true;
+            const buttons = document.querySelectorAll('.choice-button');
+            buttons.forEach(button => button.disabled = true);
+        }
+
+        function enableChoices() {
+            isChoiceDisabled = false;
+            const buttons = document.querySelectorAll('.choice-button');
+            buttons.forEach(button => button.disabled = false);
+        }
+
+        function gameOver() {
+            gameRunning = false;
+            document.getElementById('gameOverScreen').style.display = 'flex';
+            clearEnemies();
+            clearBullets();
+        }
+
+        function restartGame() {
+            initGame();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (!gameRunning) return;
+            
+            const player = document.getElementById('player');
+            
+            if (e.key === 'ArrowLeft' || e.key === 'a') {
+                playerPosition = Math.max(5, playerPosition - 5);
+                player.style.left = playerPosition + '%';
+            } else if (e.key === 'ArrowRight' || e.key === 'd') {
+                playerPosition = Math.min(95, playerPosition + 5);
+                player.style.left = playerPosition + '%';
+            }
+        });
+
+        initGame();
+    </script>
+</body>
+</html>
